@@ -126,4 +126,4 @@ class Connection {
 }
 
 const fireStoreClient = new Connection();
-module.exports  = { fireStoreClient };
+module.exports  = { fireStoreClient, serviceAccount };

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext'; // No change here
+import { useAuth } from '../context/AuthContext';
+import { serviceAccount } from '../../../backend/src/core/firestore/connection';
+import { getDatabase, ref, onValue, off } from "firebase/database";
 
 // Helper function to format seconds into MM:SS
 const formatTime = (seconds) => {
@@ -121,6 +123,9 @@ const UploadSection = ({ onUploadClick, isUploading, uploadedFileName }) => {
     </div>
   );
 };
+//  ------ END OF THE UPLOAD COMPONENT -----------------------
+
+
 
 // Component for a single video card in the list
 const VideoCard = ({ video, onSelectVideo }) => {
@@ -178,6 +183,11 @@ const VideoList = ({ videos, onSelectVideo }) => {
 };
 
 // Component for displaying video details and player
+/**
+ * 
+ * @param {*} video := contains the video object with its properties
+ * @param {*} onBackList
+ */
 const VideoDetail = ({ video, onBackToList }) => {
   if (!video) {
     return (
@@ -193,6 +203,8 @@ const VideoDetail = ({ video, onBackToList }) => {
     );
   }
 
+  // performed a slice using the : as a delimeter, to seperate the userId from the uuid for the video
+  // as the userid is used in firebase as a mechanism for segregation and user information isolation
   const analysis = video.analysis;
   const hasAnalysisResults = analysis && (
     (analysis.frameAnalysis && analysis.frameAnalysis.length > 0) ||
@@ -331,6 +343,7 @@ const DashboardPage = () => {
   // Initialize videos state as an empty array, removing mock data
   const [videos, setVideos] = useState([]);
   const [uploadedFileName, setUploadedFileName] = useState('');
+  const [jobId, setJobId] = useState(null);
   const { login } = useAuth(); 
 
   // Placeholder for logout functionality
@@ -348,13 +361,8 @@ const DashboardPage = () => {
     setUploadedFileName(file.name);
     setIsUploading(true);
 
-    // Simulate an API call to your backend for upload
-    // In a real app, you'd send the file data (e.g., via FormData)
-    // or request a presigned URL and upload directly to cloud storage.
-    console.log(`Simulating API request for uploading ${file.name}...`);
     try {
       const authToken = localStorage.getItem('token');
-      console.log('token stored in localstorage: ', authToken);
       const uploadResponse = await axios.post('/api/user/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -362,6 +370,7 @@ const DashboardPage = () => {
         }
       });
       console.log('upload successfull', uploadResponse);
+      setJobId(uploadResponse.data.jobId);
     } catch (error) {
       console.error('Error occured during upload', error);
       if (error.status === 401) {
@@ -377,7 +386,7 @@ const DashboardPage = () => {
 
       // Once "upload" is successful, add the video to the list as 'Processing'
       const newVideo = {
-        id: `v${Date.now()}`, // Unique ID for the new video
+        id: `${jobId}`, // Unique ID for the new video
         title: file.name,
         thumbnail: `https://placehold.co/320x180/${Math.floor(Math.random()*16777215).toString(16)}/ffffff?text=New+Video`,
         description: 'This video is currently being processed for compliance analysis.',
@@ -389,31 +398,9 @@ const DashboardPage = () => {
       setVideos((prevVideos) => [newVideo, ...prevVideos]);
       setUploadedFileName(''); // Clear file name display
 
-      // Simulate video processing and analysis results after another delay
-      setTimeout(() => {
-        setVideos((prevVideos) =>
-          prevVideos.map((video) =>
-            video.id === newVideo.id ? {
-              ...video,
-              status: 'Ready',
-              duration: '05:20', // Mock duration after processing
-              analysis: {
-                frameAnalysis: Math.random() > 0.5 ? [{ type: 'Inappropriate Gesture', timestamp: 35, severity: 'Medium', frameImage: 'https://placehold.co/160x90/FFD700/000000?text=Gesture' }] : [],
-                audioAnalysisCopyright: { detected: Math.random() > 0.7, details: 'Possible background music match.', severity: 'Low' },
-                audioAnalysisSpeech: {
-                  detected: Math.random() > 0.6,
-                  issues: Math.random() > 0.6 ? [{ timestamp: 120, text: '"This is a test of some bad words."', type: 'Strong Language' }] : [],
-                  severity: 'Medium'
-                }
-              }
-            } : video
-          )
-        );
-      }, 5000); // Simulate 5 seconds of processing
-
     } catch (error) {
       console.error('Error during upload simulation:', error);
-      alert(`Upload simulation failed: ${error.message}. Please try again.`); // Provide user feedback
+      alert(`Upload failed: ${error.message}. Please try again.`); // Provide user feedback
       setUploadedFileName(''); // Clear file name on error
     } finally {
       setIsUploading(false); // Ensure loading state is reset

@@ -5,9 +5,7 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom'; // No change here
 import { useAuth } from '../context/AuthContext'; // No change here
 
-// Assuming AUTH_TOKEN_LOCAL_STORAGE_KEY is consistently defined in AuthContext.js
-// If not, define it there and import it, or ensure it's "token" if that's what you're using.
-// Example: import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '../context/AuthContext';
+
 
 const cn = (...args) => args.filter(Boolean).join(' ');
 
@@ -142,11 +140,12 @@ const LoginPage = () => {
         const response = await axios.post('api/user/auth/login', { email, password });
         if (response.status === 200) {
           const token = response.data.token;
+          const userId = response.data.userId;
           console.log("LoginPage handleSubmit: Login API successful. Token received:", response.data);
 
           // 1. Call the `login` function from your AuthContext.
           // This function stores the token in localStorage AND updates the `isAuthenticated` state.
-          login(token); // This call triggers the `useEffect` above to eventually navigate.
+          login(token, userId); // This call triggers the `useEffect` above to eventually navigate.
 
           // Your original console.log for localStorage check is still useful for debugging:
           console.log('LoginPage handleSubmit: Token after AuthContext.login() call:', localStorage.getItem('token'));

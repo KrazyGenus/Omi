@@ -5,10 +5,9 @@ export const AuthContext = createContext(null);
 
 // IMPORTANT: Ensure this key matches exactly what you use in localStorage.setItem in LoginPage!
 export const AUTH_TOKEN_LOCAL_STORAGE_KEY = 'token'; // Based on your code: localStorage.setItem("token", token);
-
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Manages initial check
+  const [isLoading, setIsLoading] = useState(true);
 
   // This useEffect runs only once on mount of AuthProvider
   useEffect(() => {
@@ -33,9 +32,10 @@ export const AuthProvider = ({ children }) => {
   }, [isAuthenticated, isLoading]);
 
 
-  const login = (token) => {
+  const login = (token, userId) => {
     console.log("AuthContext: login function called with token:", token ? "received" : "null/undefined");
     localStorage.setItem(AUTH_TOKEN_LOCAL_STORAGE_KEY, token); // Store the token
+    localStorage.setItem("USERID", userId);
     setIsAuthenticated(true); // <--- THIS IS THE CRUCIAL LINE
     console.log("AuthContext: isAuthenticated set to TRUE inside login function.");
   };
@@ -43,6 +43,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     console.log("AuthContext: logout function called.");
     localStorage.removeItem(AUTH_TOKEN_LOCAL_STORAGE_KEY); // Remove token
+    localStorage.removeItem("USERID");
     setIsAuthenticated(false); // Update state to false
     console.log("AuthContext: isAuthenticated set to FALSE inside logout function.");
   };

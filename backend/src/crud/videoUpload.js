@@ -6,15 +6,18 @@ const { videoMetaQueue } = require('../utils/queues/videoMetaQueue');
 const { audioMetaQueue } = require('../utils/queues/audioMetaQueue');
 
 
-const TEMP_DIR = '/home/krazygenus/Desktop/blip/backend/src/temp';
-const FRAME_BASE_DIR = '/home/krazygenus/Desktop/blip/backend/src/frames';
-const AUDIO_BASE_DIR =  '/home/krazygenus/Desktop/blip/backend/src/audio';
+const TEMP_DIR = '/home/krazygenus/Desktop/Omi/backend/src/temp';
+const FRAME_BASE_DIR = '/home/krazygenus/Desktop/Omi/backend/src/frames';
+const AUDIO_BASE_DIR =  '/home/krazygenus/Desktop/Omi/backend/src/audio';
 
 async function videoUpload(req, res) {
     return new Promise((resolve, reject) => {
+        let userId = 0;
         const bb = busboy({ headers: req.headers });
         const uploadPromises = [];
-        const userId = req.user.id;
+        console.log('The request objet: ', req);
+        if (req.user.decode.id){ userId = req.user.decode.id }
+        else{ userId = req.user.id; }
 
         bb.on('file', (fieldname, file, fileInfo) => {
             const jobId = uuidv4();
@@ -33,15 +36,15 @@ async function videoUpload(req, res) {
               file.on('data', chunk => size += chunk.length);
               file.pipe(writeStream)
                 .on('finish', () => {
-                  // audioMetaQueue.add('process_audio', {
-                  //   jobId,
-                  //   userId,
-                  //   notifyChannel: `user:${userId}`,
-                  //   tempPath,
-                  //   audioDir,
-                  //   originalName: safeName,
-                  //   size
-                  // });
+                  audioMetaQueue.add('process_audio', {
+                  jobId,
+                  userId,
+                  notifyChannel: `user:${userId}`,
+                  tempPath,
+                  audioDir,
+                  originalName: safeName,
+                  size
+                  });
                   videoMetaQueue.add('process_video', {
                     jobId,
                     userId,
@@ -59,8 +62,8 @@ async function videoUpload(req, res) {
           });
 
           bb.on('finish', async () => {
-            const jobIds = await Promise.all(uploadPromises);
-            resolve({ status: 202, message: `${jobIds.length} video(s) queued`, jobIds });
+            const jobId = await Promise.all(uploadPromises);
+            resolve({ status: 202, message: `${jobId.length} video(s) queued`, jobId: jobId });
           });
           bb.on('error', async(err) => reject(err));
         req.pipe(bb);
