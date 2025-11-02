@@ -101,3 +101,4 @@ docker-compose.override.yml
 # Uvicorn / Gunicorn logs
 *.pid
 *.log
+cap.pem
