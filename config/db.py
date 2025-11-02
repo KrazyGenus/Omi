@@ -37,7 +37,7 @@ try:
         echo=True,
         pool_size=10,
         max_overflow=20,
-        connect_args={ "ssl":ssl_context }
+        connect_args={"ssl": ssl_context},
     )
 except Exception as db_engine:
     print("Unable to create an engine", db_engine)
@@ -47,10 +47,7 @@ except Exception as db_engine:
 AsyncSessionLocal = None
 try:
     AsyncSessionLocal = sessionmaker(
-        autocommit=False,
-        autoflush=False,
-        bind=async_engine,
-        expire_on_commit=False
+        autocommit=False, autoflush=False, bind=async_engine, expire_on_commit=False
     )
 except Exception as async_session:
     print("Unable to create async session", async_session)
@@ -59,12 +56,11 @@ except Exception as async_session:
 Base = declarative_base()
 
 
-
 # Asynchronous dependency injection function
 async def get_async_db() -> AsyncGenerator(AsyncSession, None):
     """
     Dependency that provides an asynchronous database session.
     It automatically handles session creation and cleanup (closing).
     """
-    async with  AsyncSessionLocal() as session:
+    async with AsyncSessionLocal() as session:
         yield session

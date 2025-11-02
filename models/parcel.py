@@ -17,6 +17,7 @@ class Movement(BaseModel):
     next_facility: Optional[str] = None
     estimated_arrival: Optional[datetime] = None
 
+
 class Parcel(BaseModel):
     parcel_id: str = Field(..., description="Unique identifier for each parcel")
     status: Literal["pending", "in_transit", "delivered", "cancelled", "lost"]
