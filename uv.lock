@@ -34,6 +34,12 @@ wheels = [
 ]
 
 [[package]]
+name = "asyncmy"
+version = "0.2.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/76/55cc0577f9e838c5a5213bf33159b9e484c9d9820a2bafd4d6bfa631bf86/asyncmy-0.2.10.tar.gz", hash = "sha256:f4b67edadf7caa56bdaf1c2e6cf451150c0a86f5353744deabe4426fe27aff4e", size = 63889, upload-time = "2024-12-12T14:45:09.2Z" }
+
+[[package]]
 name = "certifi"
 version = "2025.10.5"
 source = { registry = "https://pypi.org/simple" }
@@ -361,6 +367,7 @@ name = "omi"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "asyncmy" },
     { name = "fastapi", extra = ["all", "standard"] },
     { name = "jsonrpcclient" },
     { name = "pymysql" },
@@ -370,6 +377,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "asyncmy", specifier = ">=0.2.10" },
     { name = "fastapi", extras = ["all", "standard"], specifier = ">=0.120.4" },
     { name = "jsonrpcclient", specifier = ">=4.0.3" },
     { name = "pymysql", specifier = ">=1.1.2" },

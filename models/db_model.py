@@ -5,11 +5,11 @@ from config.db import Base
 
 class Parcel(Base):
     __tablename__ = "parcels"
-    prcel_id = Column(String, primary_key=True)
-    status = Column(String, nullable=False)
+    parcel_id = Column(String(length=255), primary_key=True)
+    status = Column(String(length=255), nullable=False)
     last_update = Column(DateTime, nullable=False)
     location = Column(JSON)
     movement = Column(JSON)
-    carrier = Column(String)
-    tracking_url = Column(String)
-    metadata = Column(JSON)
+    carrier = Column(String(length=255))
+    tracking_url = Column(String(length=255))
+

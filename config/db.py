@@ -4,63 +4,59 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from dotenv import load_dotenv
 from typing import AsyncGenerator
 import ssl
-
-# This load the env file
+# 1. Configuration and Environment Variables
 load_dotenv()
-
-# Load database environment URL
+# CRITICAL FIX: Correctly retrieve the environment variable
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
+    raise ValueError("The DATABASE_URL environment variable is not set.")
 
+# Use the specific asynchronous MariaDB/MySQL driver (e.g., aiomysql)
+# Ensure your URL starts with 'mariadb+aiomysql://' or 'mysql+aiomysql://'
+# Note: MariaDB is a fork of MySQL, so the MySQL dialect often works.
+# Example: mariadb+aiomysql://user:password@host:3306/dbname
 
-# Fetch the path to the ca.pem file, required by MySQL cloud provider
 CA_FILE_PATH = "config/ca.pem"
+ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+ssl_context.load_verify_locations(CA_FILE_PATH)
 
+async_engine = create_async_engine(
+    DATABASE_URL,
+    echo=True,
+    pool_size=10, 
+    max_overflow=20,
+    connect_args= { "ssl": ssl_context }
+)
 
-# A connection is created to the remote db using SSL
-ssl_context = None
-try:
-    ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-    ssl_context.load_verify_locations(CA_FILE_PATH)
-except Exception as ssl_exception:
-    print("Unable to create a connection to remote db server", ssl_exception)
+# Use AsyncSession, which is the context-aware session for async operations
+AsyncSessionLocal = sessionmaker(
+    autocommit=False, 
+    autoflush=False, 
+    bind=async_engine, 
+    class_=AsyncSession, # MUST specify AsyncSession
+    expire_on_commit=False # Essential for the ORM to function properly with async/await
+)
 
-
-# An attempt to create an async engine
-async_engine = None
-try:
-    async_engine = create_async_engine(
-        DATABASE_URL,
-        echo=True,
-        pool_size=10,
-        max_overflow=20,
-        connect_args={"ssl": ssl_context},
-    )
-except Exception as db_engine:
-    print("Unable to create an engine", db_engine)
-
-
-# An attempt to create an AsyncSession
-AsyncSessionLocal = None
-try:
-    AsyncSessionLocal = sessionmaker(
-        autocommit=False, autoflush=False, bind=async_engine, expire_on_commit=False
-    )
-except Exception as async_session:
-    print("Unable to create async session", async_session)
-
-# Base for ORM models
+# Base for your ORM models
 Base = declarative_base()
 
-
-# Asynchronous dependency injection function
-async def get_async_db() -> AsyncGenerator(AsyncSession, None):
+# 3. Asynchronous Dependency Injection Function
+async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency that provides an asynchronous database session.
     It automatically handles session creation and cleanup (closing).
     """
-    async with AsyncSessionLocal() as session:
-        yield session
+    async with AsyncSessionLocal() as db:
+        try:
+            print(db)
+            yield db
+        except Exception as e:
+            # You can log the error here or raise a custom exception
+            print(f"An Error Occurred during asynchronous database connection: {e}")
+            await db.rollback() # Ensure transaction is rolled back on error
+            raise # Re-raise the exception for FastAPI to handle
+        finally:
+            # The 'async with' block implicitly closes the session, but we 
+            # explicitly close if a synchronous pattern was used (optional here)
+            pass

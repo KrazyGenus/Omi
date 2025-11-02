@@ -13,7 +13,7 @@ class Location(BaseModel):
 
 
 class Movement(BaseModel):
-    previous_facility: Optional = None
+    previous_facility: Optional[str] = None
     next_facility: Optional[str] = None
     estimated_arrival: Optional[datetime] = None
 
@@ -26,4 +26,4 @@ class Parcel(BaseModel):
     movement: Movement
     carrier: Optional[str] = None
     tracking_url: Optional[HttpUrl] = None
-    metadata: Dict[str, Any]
+
