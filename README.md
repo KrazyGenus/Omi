@@ -1,120 +1,132 @@
-Omi: The Definitive Parcel Tracker for Dropshippers and Retailers
 
-Overview: Knowing Where the Heck Your Parcel Is
 
-I call her Omi, the she was created to as solution for dropshippers like myself, retailers, and anyone desperately needing to know where the heck their parcel is. Omi is not merely a tracking application;.
+# **Omi: A Parcel Tracker for Dropshippers and Retailers**
 
-The agent's primary function is to process complex, unstructured inbound logistical queries, retrieve enriched tracking metadata from a production-grade database, and transform this data into concise, actionable status reports using the sophisticated reasoning of a Large Language Model (LLM), the agent leverages FastAPI for its asynchronous architecture, UV for hyper-efficient dependency management, the Gemini API for intelligent data processing, and Aiven-managed PostgreSQL for secure, scalable data persistence. Deployment is seamlessly integrated via the Telex agent platform and Railway.
+## “Knowing Where the Heck Your Parcel Is”
 
-Core Agent Capabilities:
+Meet **Omi** — your intelligent parcel-tracking assistant.
+She was designed as a solution for **dropshippers**, **retailers**, and **everyday users** who desperately need to know *where the heck their parcel is*.
 
-Intelligent Data Serialization (Gemini): Omi uses the Gemini API with strict schema enforcement to reliably convert poorly formatted inbound parcel data (e.g., human-entered, semi-colon separated lists) into a structured JSON array, making it instantly usable for database queries.
+Omi isn’t just another tracking app.
+She’s a **logistics-aware AI agent** capable of understanding messy, human-style parcel inquiries, fetching relevant tracking metadata, and producing **actionable, human-readable reports** powered by the reasoning of a **Large Language Model (LLM)**.
 
-Asynchronous Concurrency: Utilizes Python's non-blocking async/await pattern (implemented via FastAPI and the google-genai AsyncClient) to execute simultaneous network and database I/O operations without blocking the main event loop, ensuring superior throughput.
+Under the hood, Omi combines:
 
-Actionable Reporting: A final, powerful Gemini call processes the raw database output and synthesizes it into a human-readable, scannable summary report tailored for operational staff, complete with calculated geolocation maps.
+* **FastAPI** for asynchronous request handling
+* **UV** for lightning-fast dependency management
+* **Gemini API** for structured data extraction and AI-powered summaries
+* **Aiven-managed PostgreSQL** for scalable, secure data persistence
+* **Telex** for agent deployment and runtime orchestration
+* **Railway** for seamless hosting and CI/CD integration
 
-🛠️ Technology Stack & Architecture
+---
 
-Component
+## 🚨 **IMPORTANT NOTICE FOR MENTORS AND TESTERS**
 
-Role
+> ⚠️ **CRITICAL TESTING ALERT**
+> Due to the nature of parcel-tracking APIs (which require *purchasing an actual product* to obtain a valid tracking number),
+> I had to use **mock data** to simulate responses from the **Universal Parcel API** during development and testing.
+>
+> This mock data **mimics the exact structure** of real-world tracking responses, including datetime fields, carrier info, and nested location objects.
+>
+> **You can test the Telex agent using the following valid sample package details:**
+>
+> ```
+> Parcel ID: PKG002NG  
+> Carrier: DHL  
+> ```
+>
+> Simply send these values through Telex to the agent — it will simulate a real parcel tracking session.
 
-Specific Technology
+When connected to a production API, this same logic will handle real parcel data without modification.
 
-Rationale
+---
 
-Framework
+## Core Agent Capabilities
 
-High-performance Web Service
+### **1. Intelligent Data Serialization (Gemini)**
 
-FastAPI
+Omi leverages the **Google Gemini API** with **strict schema enforcement** to transform poorly formatted inbound parcel data — even human-entered or semi-structured text — into **clean, structured JSON** suitable for database queries and downstream processing.
 
-Chosen for its performance, automated documentation, and native support for Python's async/await.
+### **2. Asynchronous Concurrency**
 
-LLM Engine
+Built with **FastAPI** and **AsyncClient (google-genai)**, Omi performs **non-blocking** I/O operations — enabling simultaneous API calls, DB queries, and AI reasoning without blocking the event loop.
 
-Data Structuring & Content Generation
+### **3. Actionable Reporting**
 
-Google Gemini API
+A final Gemini-powered step converts raw tracking data into **human-readable summaries**, including parcel status, expected delivery estimates, and geolocation insights — making it ideal for operations dashboards or customer notifications.
 
-Used for reliable, schema-enforced data extraction and sophisticated natural language report generation.
+---
 
-Package Manager
+## Technology Stack & Architecture
 
-Dependency Resolution & Environment
+| **Component**       | **Role**                             | **Technology**           | **Rationale**                                                      |
+| ------------------- | ------------------------------------ | ------------------------ | ------------------------------------------------------------------ |
+| **Framework**       | High-performance Web Service         | FastAPI                  | Modern async-first web framework with automatic OpenAPI docs       |
+| **LLM Engine**      | Data Structuring & Report Generation | Google Gemini API        | For schema-enforced data extraction and natural-language summaries |
+| **Package Manager** | Dependency & Environment Setup       | UV                       | Extremely fast environment creation and dependency resolution      |
+| **Database**        | Managed Data Persistence             | Aiven PostgreSQL         | Reliable, scalable cloud-hosted relational DB                      |
+| **Agent Platform**  | Deployment & Session Handling        | Telex                    | Provides async runtime environment for AI agents                   |
+| **Configuration**   | Secure Parameter Management          | `.env` via python-dotenv | Keeps API keys and DB credentials out of codebase                  |
 
-UV
+---
 
-Utilized for its superior speed in virtual environment creation and dependency resolution, dramatically accelerating CI/CD and development setup.
+## Project Setup: Establishing the Omi Environment
 
-Database
+### **1. Repository Initialization and UV Setup**
 
-Managed Data Persistence
-
-Aiven PostgreSQL
-
-Provides a robust, scalable, and highly available relational database solution without manual maintenance overhead.
-
-Agent Platform
-
-Deployment & Execution Context
-
-Telex
-
-The specified platform providing the runtime environment and handling the asynchronous session injection.
-
-Configuration
-
-Security & Parameterization
-
-.env (via python-dotenv)
-
-Essential for securely separating sensitive credentials (API keys, DB connection strings) from the codebase.
-
-🚀 Project Setup: Establishing the Omi Environment
-
-This guide assumes the prerequisites of git and the uv package manager are installed on your system.
-
-1. Repository Initialization and UV Setup
-
-Execute the following sequence of commands to clone the repository and establish a clean, reproducible development environment using UV:
-
-# Clone the repository containing the Omi agent code
+```bash
+# Clone the repository
 git clone <YOUR_REPO_URL>
 cd omi-parcel-tracker
 
-# Create a new, isolated virtual environment using UV
-# The .venv directory ensures environment-specific dependencies are contained.
+# Create and activate a virtual environment
 uv venv
-
-# Activate the virtual environment to ensure all subsequent commands use the isolated environment
 source .venv/bin/activate
 
-# Install all necessary dependencies (FastAPI, google-genai, db connectors, etc.)
-# UV processes this significantly faster than traditional package managers.
-uv pip install -r requirements.txt || uv sync
+# Install dependencies
+uv sync
+```
 
+---
 
-2. Configuration (.env File)
+### **2. Configuration (`.env` File)**
 
-Omi requires secure access keys and connection parameters. Create a file named .env in the project root directory and populate it meticulously with the following secure credentials:
+Create a `.env` file in the project root with the following variables:
 
+```bash
 # --- Gemini API Key ---
-# Required for making authenticated calls for data serialization and report generation.
 GOOGLE_GEMENI_AI_KEY="YOUR_GEMINI_API_KEY_HERE"
 
-# --- Aiven PostgreSQL Database Connection Details ---
-# These are the credentials provided directly by your Aiven service dashboard.
-# The agent relies on these to construct the database session connection string.
+# --- PostgreSQL (Aiven) Connection ---
 POSTGRES_USER="your_db_user"
 POSTGRES_PASSWORD="your_db_password"
 POSTGRES_HOST="your-aiven-host.aivencloud.com"
 POSTGRES_PORT=19999
 POSTGRES_DB="defaultdb"
+```
 
-3. Testing Methodology: The Necessity of Mock Data
+---
 
-For the purpose of rigorous functional testing and demonstrating the end-to-end capabilities of Omi, the retrieve_parcel_meta_by_id function was initially implemented with mock parcel data generation. This simulated data faithfully reproduces the complex structure, including datetime objects and nested location details, that a real-world logistics API would return.
+### **3. Testing Methodology — The Necessity of Mock Data**
 
-This methodological choice stemmed from the practical constraint that procuring live, trackable parcel data—which would necessitate the immediate ordering and tracking of a physical item—was infeasible for a proof-of-concept environment. The current implementation thus showcases Omi's processing, LLM-driven serialization, and report generation logic. All that is required for immediate production use is to replace the internal mock implementation of retrieve_parcel_meta_by_id with an actual connection to a carrier's live API (e.g., DHL, FedEx, or a specialized logistics tracking provider) to begin consuming real-world data.
+For demonstration purposes, **`retrieve_parcel_meta_by_id()`** is currently implemented with **mock parcel data** that simulates realistic responses from a logistics API.
+This includes datetime serialization, nested JSON structures, and carrier-specific tracking formats.
+
+This choice was made because obtaining a **live tracking number** from DHL or any universal API would require **buying a physical product online**, which was impractical within the scope of this project.
+
+Once you integrate a real carrier API (e.g., DHL, FedEx, or Universal Parcel API), simply **replace the mock implementation** with the live data retrieval call — all other parts of the system (Gemini processing, report generation, and Telex integration) will remain fully compatible.
+
+---
+
+## Summary
+
+Omi demonstrates:
+
+* **LLM-powered logistics reasoning**
+* **Async-first architecture**
+* **Mock-driven testing realism**
+* **Telex integration for AI-agent deployment**
+
+Even without a real-world parcel, you can fully experience Omi’s reasoning and report generation via the provided **mock parcel details**.
+mi will respond with a simulated but realistic parcel tracking summary.
