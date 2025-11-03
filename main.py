@@ -4,12 +4,21 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 import os
 import json
-from models.a2a import JSONRPCRequest, JSONRPCResponse, TaskResult, TaskStatus, Artifact, MessagePart, A2AMessage
-from agents.parcel_agent import parcelAgent
+from models.a2a import (
+    JSONRPCRequest,
+    JSONRPCResponse,
+    TaskResult,
+    TaskStatus,
+    Artifact,
+    MessagePart,
+    A2AMessage,
+)
+from agents.parcel_agent import process_message
 from config.db import Base, async_engine, get_async_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
 from utils.flood_db import populate_db
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,21 +26,25 @@ async def lifespan(app: FastAPI):
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         yield
-        
-        
+
+
 app = FastAPI(
     title="Parcel Tracker Agent A2A",
     description="Handle Parcel Tracking and customer relations on parcel delay",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
+
 
 @app.post("/flood")
 async def flood_table(db_session: AsyncSession = Depends(get_async_db)):
     await populate_db(db_session)
 
+
 @app.post("/a2a/parcel")
-async def parcel_entry(request: Request):
+async def parcel_entry(
+    request: Request, db_session: AsyncSession = Depends(get_async_db)
+):
     """Main A2A endpoint for parcel agent"""
     try:
         # A parse of the request body
@@ -46,18 +59,18 @@ async def parcel_entry(request: Request):
                     "id": body.get("id"),
                     "error": {
                         "code": -32600,
-                        "message": "Invalid JSON-RPC request, jsonrpc must be '2.0' and id is required"
-                    }
-                }
+                        "message": "Invalid JSON-RPC request, jsonrpc must be '2.0' and id is required",
+                    },
+                },
             )
         rpc_request = JSONRPCRequest(**body)
-       
+
         # Extract messages
         messages = []
         context_id = None
         task_id = None
         config = None
-        
+
         if rpc_request.method == "message/send":
             messages = [rpc_request.params.message]
             config = rpc_request.params.configuration
@@ -65,15 +78,29 @@ async def parcel_entry(request: Request):
             messages = rpc_request.params.messages
             context_id = rpc_request.params.context_id
             task_id = rpc_request.params.task_id
-        
+
         # Process and return the result
-        parcelAgent.print_payload(messages)
+        result = await process_message(
+            messages,
+            context_id,
+            task_id,
+            config,
+            db_session,
+        )
+
+        # Build response
+        response = JSONRPCResponse(
+            jsonrpc="2.0",
+            id=rpc_request.id,
+            result=result,
+        )
+        return response.model_dump()
     except Exception as e:
         print(e)
-
 
 
 if __name__ == "__main__":
     PORT = 8000
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=PORT)
