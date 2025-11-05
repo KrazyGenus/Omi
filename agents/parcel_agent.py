@@ -7,6 +7,7 @@ from typing import List, Optional, Dict, Any
 from google import genai
 from google.genai.errors import APIError
 import datetime
+from datetime import datetime
 from utils.retrieve_db import retrieve_parcel_meta_by_id
 from models.a2a import (
     A2AMessage, TaskResult, TaskStatus, Artifact,
@@ -180,23 +181,25 @@ async def process_message(client_payload: List[A2AMessage], context_id: Optional
     response_message = A2AMessage(
         role="agent",
         parts=[MessagePart(kind="text", text="Periodic parcel status update completed and summarized.")],
-        taskId = task_id_new,
-        contextId = context_id,
+        taskId=f"task-{task_id_new}",
+        contextId=f"ctx-{context_id}" if context_id is not None else str(uuid4()),
     )
 
     # Defines the Build artifacts (the structured final output)
     artifacts = Artifact(
         name="Parcel Status Summary",
         parts=[content_part],
-        taskId=task_id_new
+        taskId=f"task-{task_id_new}"
     )
     # A return of the constructed result, back to the agent.
     return TaskResult(
-        id=task_id_new,
-        contextId=context_id if context_id is not None else str(uuid4()),
+        id=f"task-{task_id_new}",
+        contextId=f"ctx-{context_id}" if context_id is not None else str(uuid4()),
         status=TaskStatus(
             state="completed",
+            timestamp=datetime.utcnow().isoformat(),
             message=response_message
         ),
-        artifacts=[artifacts]
+        artifacts=[artifacts],
+        kind="task"
     )
