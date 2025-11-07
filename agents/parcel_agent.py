@@ -6,8 +6,8 @@ from uuid import uuid4
 from typing import List, Optional, Dict, Any
 from google import genai
 from google.genai.errors import APIError
-import datetime
-from datetime import datetime
+import datetime 
+
 from utils.retrieve_db import retrieve_parcel_meta_by_id
 from models.a2a import (
     A2AMessage, TaskResult, TaskStatus, Artifact,
@@ -29,7 +29,7 @@ PARCEL_INPUT_SCHEMA = {
             "carrier": {"type": "string", "description": "The logistics carrier name, derived from 'carrier'."}
         },
         "required": ["parcel_id", "carrier"],
-       
+        
     }
 }
 
@@ -81,7 +81,8 @@ def json_serial(obj):
     JSON serializer for objects not serializable by default json code.
     Converts datetime objects to ISO 8601 strings.
     """
-    if isinstance(obj, datetime.datetime):
+   
+    if isinstance(obj, datetime.datetime): 
         return obj.isoformat()
 
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
@@ -141,6 +142,7 @@ async def process_message(client_payload: List[A2AMessage], context_id: Optional
 
     # Database Retrieval
     try:
+        # The structured_output now contains data ready for database query.
         db_result = await retrieve_parcel_meta_by_id(structured_output, db_session)
         logging.info("Database retrieval complete.")
     except (TimeoutError) as e:
@@ -152,6 +154,7 @@ async def process_message(client_payload: List[A2AMessage], context_id: Optional
 
 
     # Second Gemini Call: Report Generation
+    
     final_parcel_prompt = GEMINI_PACKAGE_RESPONSE_PROMPT.replace(
         "{{db_result}}", json.dumps(db_result, indent=2, default=json_serial)
     )
@@ -197,7 +200,7 @@ async def process_message(client_payload: List[A2AMessage], context_id: Optional
         contextId=f"ctx-{context_id}" if context_id is not None else str(uuid4()),
         status=TaskStatus(
             state="completed",
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.datetime.utcnow().isoformat(), 
             message=response_message
         ),
         artifacts=[artifacts],
